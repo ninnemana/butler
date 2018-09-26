@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	configs = []services.Service{
-		services.Service{
+	configs = []*services.Service{
+		&services.Service{
 			LocalAddress:   "localhost:8080",
 			ServiceAddress: "butler-test:8080",
 		},
