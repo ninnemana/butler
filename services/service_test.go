@@ -43,7 +43,8 @@ func TestService(t *testing.T) {
 		LocalAddress:   "localhost:8161",
 		ServiceAddress: localhost,
 	}
-	Start(svc)
+	go Start(svc)
+
 	defer func() {
 		if recover() != nil {
 			svc.Close()
