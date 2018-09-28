@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/ninnemana/butler/services"
 )
 
@@ -14,5 +16,9 @@ var (
 )
 
 func main() {
-	services.Start(configs...)
+	if err := services.Start(services.Config{
+		LocalAddress: "localhost:8081",
+	}); err != nil {
+		log.Fatalf("fell out of listener: %v", err)
+	}
 }

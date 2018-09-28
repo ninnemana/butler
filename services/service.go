@@ -2,80 +2,98 @@ package services
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 type Service struct {
 	LocalAddress   string
 	ServiceAddress string
 	Log            bool
-	TLS            *tls.Config
 
 	source net.Listener
 	dest   net.Conn
 }
 
-func Start(svcs ...*Service) {
-	ch := make(chan bool)
-	for _, svc := range svcs {
-		go func(s *Service) {
-			if err := s.Listen(); err != nil {
-				log.Fatalf("fell out of service listener: %v", err)
-			}
-		}(svc)
+type Config struct {
+	LocalAddress string
+	TLS          *TLS
+}
+
+type TLS struct {
+	CertBlock []byte
+	KeyBlock  []byte
+}
+
+func Start(cfg Config) error {
+
+	var err error
+	var source net.Listener
+	switch {
+	case cfg.TLS == nil:
+		source, err = net.Listen("tcp", cfg.LocalAddress)
+	default:
+		var cert tls.Certificate
+		cert, err = tls.X509KeyPair(cfg.TLS.CertBlock, cfg.TLS.KeyBlock)
+		if err != nil {
+			return err
+		}
+
+		source, err = tls.Listen("tcp", cfg.LocalAddress, &tls.Config{
+			MinVersion:               tls.VersionTLS12,
+			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+			PreferServerCipherSuites: true,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			},
+			Certificates: []tls.Certificate{cert},
+		},
+		)
 	}
-	<-ch
+
+	if err != nil {
+		return err
+	}
+
+	// accept connections for the local address
+	for {
+		req, err := source.Accept()
+		if err != nil {
+			log.Printf("failed to accept connection: %v\n", err)
+			continue
+		}
+
+		fmt.Println(req.RemoteAddr(), req.LocalAddr())
+		conn := req.(*net.TCPConn)
+
+		r := &http.Request{}
+		r.Write(conn)
+		fmt.Println(r)
+		conn.Close()
+		req.Close()
+		// handle the request
+		// go handle(req)
+	}
+
+	return nil
 }
 
 func (s *Service) Close() {
 	s.source.Close()
 }
 
-func (s *Service) Listen() error {
-	var err error
-
-	// open TCP listener for source
-	switch {
-	case s.TLS == nil:
-		s.source, err = net.Listen("tcp", s.LocalAddress)
-	default:
-		s.source, err = tls.Listen("tcp", s.LocalAddress, s.TLS)
-	}
-
-	if err != nil {
-		return errors.Wrap(err, "failed to create TCP listener")
-	}
-
-	// accept connections for the local address
-	for {
-		req, err := s.source.Accept()
-		if err != nil {
-			log.Printf("failed to accept connection: %v\n", err)
-			continue
-		}
-
-		// handle the request
-		go s.handle(req)
-	}
-}
-
 func (s *Service) handle(req net.Conn) {
 	defer req.Close()
 
 	var err error
-	// dial a connection with the service
-	switch {
-	case s.TLS == nil:
-		s.dest, err = net.Dial("tcp", s.ServiceAddress)
-	default:
-		s.dest, err = tls.Dial("tcp", s.ServiceAddress, s.TLS)
-	}
-
+	s.dest, err = net.Dial("tcp", s.ServiceAddress)
 	if err != nil {
 		log.Printf("failed to connect to service: %v\n", err)
 		return
