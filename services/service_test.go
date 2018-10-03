@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	sampleResponse = "TEST RESPONSE"
+	sampleResponse = "TEST-RESPONSE"
 )
 
 var (
