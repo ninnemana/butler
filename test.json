@@ -1,0 +1,28 @@
+{
+  "steps": [
+    {
+      "name": "gcr.io/cloud-builders/go",
+      "args": [
+        "get"
+      ],
+      "env": ["GOPATH=."]
+    },
+    {
+      "name": "gcr.io/cloud-builders/go",
+      "args": [
+        "test",
+        "./..."
+      ],
+      "env": ["GOPATH=."]
+    },
+    {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "build",
+        "--tag=gcr.io/ninneman-org/hello",
+        "."
+      ]
+    }
+  ],
+  "images": ["gcr.io/ninneman-org/butler"]
+}
