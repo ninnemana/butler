@@ -60,6 +60,6 @@ func TestService(t *testing.T) {
 	}
 
 	if strings.TrimSpace(string(data)) != sampleResponse {
-		t.Fatalf("expected '%s', received '%s'", sampleResponse, string(data))
+		t.Errorf("expected '%s', received '%s'", sampleResponse, string(data))
 	}
 }
