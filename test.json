@@ -3,7 +3,9 @@
     {
       "name": "gcr.io/cloud-builders/go",
       "args": ["version"],
-      "env": ["GOPATH=."]
+      "env": [
+        "PROJECT_ROOT=github.com/ninnemana/butler"
+      ]
     },
     {
       "name": "gcr.io/cloud-builders/go",
@@ -11,13 +13,15 @@
         "test",
         "./..."
       ],
-      "env": ["GOPATH=."]
+      "env": [
+        "PROJECT_ROOT=github.com/ninnemana/butler"
+      ]
     },
     {
       "name": "gcr.io/cloud-builders/docker",
       "args": [
         "build",
-        "--tag=gcr.io/ninneman-org/hello",
+        "--tag=gcr.io/ninneman-org/butler",
         "."
       ]
     }
