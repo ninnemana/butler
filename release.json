@@ -1,0 +1,30 @@
+{
+  "steps": [
+    {
+      "name": "gcr.io/cloud-builders/go",
+      "args": ["version"],
+      "env": [
+        "PROJECT_ROOT=github.com/ninnemana/butler"
+      ]
+    },
+    {
+      "name": "gcr.io/cloud-builders/go",
+      "args": [
+        "test",
+        "./..."
+      ],
+      "env": [
+        "PROJECT_ROOT=github.com/ninnemana/butler"
+      ]
+    },
+    {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "build",
+        "--tag=gcr.io/ninneman-org/butler",
+        "."
+      ]
+    }
+  ],
+  "images": ["gcr.io/ninneman-org/butler"]
+}
