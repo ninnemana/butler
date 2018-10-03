@@ -39,19 +39,15 @@ func TestMain(m *testing.M) {
 
 func TestService(t *testing.T) {
 
-	svc := &Service{
-		LocalAddress:   "localhost:8161",
-		ServiceAddress: localhost,
-	}
-	go Start(svc)
-
-	defer func() {
-		if recover() != nil {
-			svc.Close()
+	go func() {
+		if err := Start(Config{
+			LocalAddress: "localhost:8081",
+		}); err != nil {
+			t.Fatalf("failed to start server: %v", err)
 		}
 	}()
 
-	res, err := http.Get("http://localhost:8161")
+	res, err := http.Get(server.URL)
 	if err != nil {
 		t.Fatalf("failed to make request to local proxy address: %v", err)
 	}
