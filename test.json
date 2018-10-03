@@ -25,6 +25,5 @@
         "."
       ]
     }
-  ],
-  "images": ["gcr.io/ninneman-org/butler"]
+  ]
 }
