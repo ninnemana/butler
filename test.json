@@ -3,13 +3,6 @@
     {
       "name": "gcr.io/cloud-builders/go",
       "args": [
-        "get"
-      ],
-      "env": ["GOPATH=."]
-    },
-    {
-      "name": "gcr.io/cloud-builders/go",
-      "args": [
         "test",
         "./..."
       ],
