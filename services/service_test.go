@@ -41,13 +41,23 @@ func TestService(t *testing.T) {
 
 	go func() {
 		if err := Start(Config{
-			LocalAddress: "localhost:8081",
+			ListenAddress: "localhost:8081",
+			Targets: map[string]string{
+				"butler-proxy": server.URL,
+			},
 		}); err != nil {
 			t.Fatalf("failed to start server: %v", err)
 		}
 	}()
 
-	res, err := http.Get(server.URL)
+	req, err := http.NewRequest(http.MethodGet, "http://localhost:8081", nil)
+	if err != nil {
+		t.Fatalf("Failed to create HTTP request: %v", err)
+	}
+
+	client := &http.Client{}
+	req.Host = "butler-proxy"
+	res, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("failed to make request to local proxy address: %v", err)
 	}

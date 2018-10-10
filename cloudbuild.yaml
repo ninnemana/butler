@@ -1,0 +1,17 @@
+steps:
+- name: gcr.io/cloud-builders/go
+  args:
+  - test
+  - "./..."
+  env:
+  - PROJECT_ROOT=github.com/ninnemana/butler
+- name: gcr.io/cloud-builders/docker
+  args:
+  - build
+  - "-t"
+  - us.gcr.io/ninneman-org/butler:$SHORT_SHA
+  - "-f"
+  - Dockerfile
+  - "."
+images:
+- us.gcr.io/ninneman-org/butler:$SHORT_SHA
