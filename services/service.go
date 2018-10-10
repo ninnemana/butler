@@ -7,17 +7,17 @@ import (
 )
 
 type Config struct {
-	ListenAddress string
-	TLS           *TLS
-	Targets       map[string]string
+	ListenAddress string            `json:"listenAddress,omitempty"`
+	TLS           *TLS              `json:"tls,omitempty"`
+	Targets       map[string]string `json:"targets,omitempty"`
 }
 
 type TLS struct {
-	CertBlock []byte
-	KeyBlock  []byte
+	CertBlock []byte `json:"cert_block,omitempty"`
+	KeyBlock  []byte `json:"key_block,omitempty"`
 
-	CertFile string
-	KeyFile  string
+	CertFile string `json:"cert_file,omitempty"`
+	KeyFile  string `json:"key_file,omitempty"`
 }
 
 func Start(cfg Config) error {
