@@ -5,4 +5,6 @@ COPY . .
 
 RUN go install -v ./...
 
+EXPOSE 80
+
 ENTRYPOINT ["butler"]
