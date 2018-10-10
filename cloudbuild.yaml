@@ -11,10 +11,10 @@ steps:
   - "--cache-from"
   - us.gcr.io/ninneman-org/butler:latest
   - "-t"
-  - us.gcr.io/ninneman-org/butler:$SHORT_SHA
+  - us.gcr.io/ninneman-org/butler:$([[ $BRANCH_NAME = master ]] && echo latest || echo $SHORT_SHA)
   - "-f"
   - Dockerfile
   - "."
 images:
-- us.gcr.io/ninneman-org/butler:latest
+- us.gcr.io/ninneman-org/butler:$([[ $BRANCH_NAME = master ]] && echo latest || echo $SHORT_SHA)
 - us.gcr.io/ninneman-org/butler:$SHORT_SHA
