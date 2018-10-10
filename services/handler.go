@@ -6,19 +6,24 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"sync"
 )
 
-type handler struct{}
+type handler struct {
+	Targets map[string]string
+	proxies map[string]*httputil.ReverseProxy
+	l       sync.Mutex
+}
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	host := r.Host
 
-	if fn, ok := hostProxy[host]; ok {
+	if fn, ok := h.proxies[host]; ok {
 		fn.ServeHTTP(w, r)
 		return
 	}
 
-	if target, ok := hostTarget[host]; ok {
+	if target, ok := h.Targets[host]; ok {
 		remote, err := url.Parse(target)
 		if err != nil {
 			log.Println("target parse fail:", err)
@@ -26,7 +31,18 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		proxy := httputil.NewSingleHostReverseProxy(remote)
-		hostProxy[host] = proxy
+
+		h.l.Lock()
+		switch h.proxies {
+		case nil:
+			h.proxies = map[string]*httputil.ReverseProxy{
+				host: proxy,
+			}
+		default:
+			h.proxies[host] = proxy
+		}
+		h.l.Unlock()
+
 		proxy.ServeHTTP(w, r)
 		return
 	}
