@@ -1,24 +1,40 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"log"
+	"os"
 
 	"github.com/ninnemana/butler/services"
 )
 
 var (
-	configs = []*services.Service{
-		&services.Service{
-			LocalAddress:   "localhost:8080",
-			ServiceAddress: "butler-test:8080",
-		},
-	}
+	cfg  services.Config
+	file = flag.String("config", "", "file to read configuration")
 )
 
 func main() {
-	if err := services.Start(services.Config{
-		LocalAddress: "localhost:8081",
-	}); err != nil {
+	flag.Parse()
+
+	if file == nil {
+		log.Fatalf("invalid configuration file")
+	}
+
+	if _, err := os.Stat(*file); err != nil {
+		log.Fatalf("failed to read file: %s", *file)
+	}
+
+	f, err := os.Open(*file)
+	if err != nil {
+		log.Fatalf("failed to read config file: %v", err)
+	}
+
+	if err := json.NewDecoder(f).Decode(&cfg); err != nil {
+		log.Fatalf("failed to decode JSON: %v", err)
+	}
+
+	if err := services.Start(cfg); err != nil {
 		log.Fatalf("fell out of listener: %v", err)
 	}
 }
