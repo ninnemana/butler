@@ -2,28 +2,14 @@ package services
 
 import (
 	"crypto/tls"
-	"net"
+	"log"
 	"net/http"
-	"net/http/httputil"
 )
-
-var (
-	hostTarget = map[string]string{}
-	hostProxy  = map[string]*httputil.ReverseProxy{}
-)
-
-type Service struct {
-	LocalAddress   string
-	ServiceAddress string
-	Log            bool
-
-	source net.Listener
-	dest   net.Conn
-}
 
 type Config struct {
-	LocalAddress string
-	TLS          *TLS
+	ListenAddress string
+	TLS           *TLS
+	Targets       map[string]string
 }
 
 type TLS struct {
@@ -36,8 +22,20 @@ type TLS struct {
 
 func Start(cfg Config) error {
 
-	var tlsConfig *tls.Config
-	if cfg.TLS != nil {
+	h := &handler{
+		Targets: cfg.Targets,
+	}
+	http.Handle("/", h)
+
+	switch cfg.TLS {
+	case nil:
+		server := &http.Server{
+			Addr:    cfg.ListenAddress,
+			Handler: h,
+		}
+
+		return server.ListenAndServe()
+	default:
 		var cert tls.Certificate
 		var err error
 
@@ -52,7 +50,7 @@ func Start(cfg Config) error {
 			return err
 		}
 
-		tlsConfig = &tls.Config{
+		tlsConfig := &tls.Config{
 			MinVersion:               tls.VersionTLS12,
 			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 			PreferServerCipherSuites: true,
@@ -64,15 +62,31 @@ func Start(cfg Config) error {
 			},
 			Certificates: []tls.Certificate{cert},
 		}
-	}
 
-	h := &handler{}
-	http.Handle("/", h)
-	server := &http.Server{
-		Addr:      cfg.LocalAddress,
-		Handler:   h,
-		TLSConfig: tlsConfig,
-	}
+		httpRedirect := http.NewServeMux()
+		httpRedirect.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+			target := "https://" + req.Host + req.URL.Path
+			if len(req.URL.RawQuery) > 0 {
+				target += "?" + req.URL.RawQuery
+			}
+			http.Redirect(w, req, target, http.StatusPermanentRedirect)
+		})
 
-	return server.ListenAndServe()
+		go func() {
+			tlsSrv := &http.Server{
+				Addr:         ":443",
+				Handler:      h,
+				TLSConfig:    tlsConfig,
+				TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+			}
+			log.Fatal(tlsSrv.ListenAndServe())
+		}()
+
+		srv := &http.Server{
+			Addr:    ":80",
+			Handler: h,
+		}
+
+		return srv.ListenAndServe()
+	}
 }
