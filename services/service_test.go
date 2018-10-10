@@ -69,7 +69,7 @@ func TestService(t *testing.T) {
 		t.Fatalf("failed to read proxy response body: %v", err)
 	}
 
-	if strings.TrimSpace(string(data)) == sampleResponse {
+	if strings.TrimSpace(string(data)) != sampleResponse {
 		t.Errorf("expected '%s', received '%s'", sampleResponse, string(data))
 	}
 }
