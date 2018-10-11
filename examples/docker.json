@@ -1,0 +1,6 @@
+{
+	"listenAddress": ":80",
+	"targets": {
+		"butler-proxy": "https://www.reddit.com"
+    }
+}
