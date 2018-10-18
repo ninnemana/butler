@@ -15,3 +15,7 @@ steps:
   - "."
 images:
 - us.gcr.io/ninneman-org/butler:$SHORT_SHA
+secrets:
+- kmsKeyName: projects/ninneman-org/locations/global/keyRings/continuous-integration/cryptoKeys/cloud-build
+  secretEnv:
+    CODECOV_TOKEN: CiQAotsHij6vFXqTqbpPmoeva4Um+B2NlTCXW1g9RTORjZx5A9gSTQBFyemJTFfujM/zpb5g/LEFsEygSsUAr+GwvAHBJNnHI2G9XK+RXPfBO3eXKYG0YZm4o3abbpb7+Yn2eUBl7QyRB7BMKPl9U+veHif1
