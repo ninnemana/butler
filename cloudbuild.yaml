@@ -15,12 +15,9 @@ steps:
   - "-f"
   - Dockerfile
   - "."
-- name: gcr.io/cloud-builders/curl
+- name: gcr.io/cloud-builders/bash
   args:
-  - "-s"
-  - "https://codecov.io/bash"
-  - "|"
-  - "bash"
+  - <(curl -s https://codecov.io/bash)
   secretEnv: ['CODECOV_TOKEN']
 images:
 - us.gcr.io/ninneman-org/butler:$SHORT_SHA
