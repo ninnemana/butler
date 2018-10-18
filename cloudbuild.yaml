@@ -2,6 +2,9 @@ steps:
 - name: gcr.io/cloud-builders/go
   args:
   - test
+  - "-race"
+  - "-coverprofile=profile.out"
+  - "-covermode=atomic"
   - "./..."
   env:
   - PROJECT_ROOT=github.com/ninnemana/butler
@@ -13,6 +16,13 @@ steps:
   - "-f"
   - Dockerfile
   - "."
+- name: gcr.io/cloud-builders/curl
+  args:
+  - "-s"
+  - "https://codecov.io/bash"
+  - "|"
+  - "bash"
+  secretEnv: ['CODECOV_TOKEN']
 images:
 - us.gcr.io/ninneman-org/butler:$SHORT_SHA
 secrets:
