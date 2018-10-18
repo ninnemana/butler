@@ -2,7 +2,6 @@ steps:
 - name: gcr.io/cloud-builders/go
   args:
   - test
-  - "-race"
   - "-coverprofile=profile.out"
   - "-covermode=atomic"
   - "./..."
