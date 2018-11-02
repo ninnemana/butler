@@ -44,40 +44,40 @@ func Start(cfg Config) error {
 		)
 	}
 
-	var cert tls.Certificate
-	var err error
+	// var cert tls.Certificate
+	// var err error
 
-	switch {
-	case cfg.TLS.CertBlock != nil && cfg.TLS.KeyBlock != nil:
-		cert, err = tls.X509KeyPair(cfg.TLS.CertBlock, cfg.TLS.KeyBlock)
-	case cfg.TLS.CertFile != "" && cfg.TLS.KeyFile != "":
-		cert, err = tls.LoadX509KeyPair(cfg.TLS.CertFile, cfg.TLS.KeyFile)
-	}
+	// switch {
+	// case cfg.TLS.CertBlock != nil && cfg.TLS.KeyBlock != nil:
+	// 	cert, err = tls.X509KeyPair(cfg.TLS.CertBlock, cfg.TLS.KeyBlock)
+	// case cfg.TLS.CertFile != "" && cfg.TLS.KeyFile != "":
+	// 	cert, err = tls.LoadX509KeyPair(cfg.TLS.CertFile, cfg.TLS.KeyFile)
+	// }
 
-	if err != nil {
-		return errors.Wrap(err, "failed to read TLS certificate")
-	}
+	// if err != nil {
+	// 	return errors.Wrap(err, "failed to read TLS certificate")
+	// }
 
-	tlsConfig := &tls.Config{
-		MinVersion:               tls.VersionTLS11,
-		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
-		PreferServerCipherSuites: true,
-		CipherSuites: []uint16{
-			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-			tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-		},
-		Certificates: []tls.Certificate{cert},
-	}
+	// tlsConfig := &tls.Config{
+	// 	MinVersion:               tls.VersionTLS11,
+	// 	CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+	// 	PreferServerCipherSuites: true,
+	// 	CipherSuites: []uint16{
+	// 		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+	// 		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+	// 		tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+	// 		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+	// 	},
+	// 	Certificates: []tls.Certificate{cert},
+	// }
 
 	tlsChan := make(chan error)
 	unsecure := make(chan error)
 	go func() {
 		tlsSrv := &http.Server{
-			Addr:         ":443",
-			Handler:      h,
-			TLSConfig:    tlsConfig,
+			Addr:    ":443",
+			Handler: h,
+			// TLSConfig:    tlsConfig,
 			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 		}
 		tlsChan <- tlsSrv.ListenAndServe()
