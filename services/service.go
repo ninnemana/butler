@@ -59,6 +59,7 @@ func Start(cfg Config) error {
 		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 		PreferServerCipherSuites: true,
 		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
 			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
 			tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
@@ -67,30 +68,20 @@ func Start(cfg Config) error {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	httpRedirect := http.NewServeMux()
-	httpRedirect.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		target := "https://" + req.Host + req.URL.Path
-		if len(req.URL.RawQuery) > 0 {
-			target += "?" + req.URL.RawQuery
-		}
-		http.Redirect(w, req, target, http.StatusPermanentRedirect)
-	})
-
 	tlsChan := make(chan error)
 	unsecure := make(chan error)
 	go func() {
-		tlsSrv := &http.Server{
-			Addr:         ":443",
-			Handler:      h,
-			TLSConfig:    tlsConfig,
-			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+		srv := &http.Server{
+			Addr:      ":443",
+			Handler:   h,
+			TLSConfig: tlsConfig,
 		}
-		tlsChan <- tlsSrv.ListenAndServe()
+		tlsChan <- srv.ListenAndServeTLS("", "")
 	}()
 
 	go func() {
 		srv := &http.Server{
-			Addr:    ":80",
+			Addr:    cfg.ListenAddress,
 			Handler: h,
 		}
 

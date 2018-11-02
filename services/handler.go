@@ -1,12 +1,15 @@
 package services
 
 import (
+	"crypto/tls"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"sync"
+	"time"
 )
 
 type handler struct {
@@ -17,7 +20,6 @@ type handler struct {
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	host := r.Host
-
 	target, ok := h.Targets[host]
 	if !ok {
 		notFound(w)
@@ -38,6 +40,15 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(remote)
+	proxy.Transport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		Dial: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout: 10 * time.Second,
+		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+	}
 
 	h.l.Lock()
 	switch h.proxies {
