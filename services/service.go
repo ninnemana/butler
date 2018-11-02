@@ -59,7 +59,7 @@ func Start(cfg Config) error {
 	}
 
 	tlsConfig := &tls.Config{
-		MinVersion:               tls.VersionTLS12,
+		MinVersion:               tls.VersionTLS11,
 		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 		PreferServerCipherSuites: true,
 		CipherSuites: []uint16{
