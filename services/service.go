@@ -23,9 +23,13 @@ type TLS struct {
 
 func Start(cfg Config) error {
 
-	h := &handler{
-		Targets: cfg.Targets,
+	h := NewHandler()
+	for src, dst := range cfg.Targets {
+		if err := h.PutTarget(src, dst); err != nil {
+			return errors.Wrap(err, "failed to register target")
+		}
 	}
+
 	http.Handle("/", h)
 
 	if cfg.TLS == nil {
