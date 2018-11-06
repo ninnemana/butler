@@ -22,7 +22,7 @@ type handler struct {
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	if h.EnforceSSL && r.URL.Scheme == "http://" {
+	if h.EnforceSSL && r.TLS == nil {
 		http.Redirect(
 			w,
 			r,
