@@ -2,6 +2,7 @@ package services
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -13,12 +14,28 @@ import (
 )
 
 type handler struct {
-	Targets map[string]string
-	proxies map[string]*httputil.ReverseProxy
-	l       sync.Mutex
+	EnforceSSL bool
+	Targets    map[string]string
+	proxies    map[string]*httputil.ReverseProxy
+	l          sync.Mutex
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	if h.EnforceSSL && r.TLS == nil {
+		redirect := fmt.Sprintf("https://%s%s", r.Host, r.URL.Path)
+		if r.URL.RawQuery != "" {
+			redirect = redirect + "?" + r.URL.RawQuery
+		}
+		http.Redirect(
+			w,
+			r,
+			redirect,
+			http.StatusTemporaryRedirect,
+		)
+		return
+	}
+
 	host := r.Host
 	target, ok := h.Targets[host]
 	if !ok {
