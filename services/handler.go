@@ -8,17 +8,34 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 )
 
 type handler struct {
-	Targets map[string]string
-	proxies map[string]*httputil.ReverseProxy
-	l       sync.Mutex
+	EnforceSSL bool
+	Targets    map[string]string
+	proxies    map[string]*httputil.ReverseProxy
+	l          sync.Mutex
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	if h.EnforceSSL && r.URL.Scheme == "http://" {
+		http.Redirect(
+			w,
+			r,
+			strings.Replace(
+				r.URL.String(),
+				"http://",
+				"https://",
+				1,
+			),
+			http.StatusTemporaryRedirect,
+		)
+	}
+
 	host := r.Host
 	target, ok := h.Targets[host]
 	if !ok {
