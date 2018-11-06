@@ -23,6 +23,10 @@ type handler struct {
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if h.EnforceSSL && r.TLS == nil {
+		redirect := fmt.Sprintf("https://%s%s", r.Host, r.URL.Path)
+		if r.URL.RawQuery != "" {
+			redirect = redirect + "?" + r.URL.RawQuery
+		}
 		http.Redirect(
 			w,
 			r,
