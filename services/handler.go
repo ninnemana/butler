@@ -30,7 +30,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(
 			w,
 			r,
-			fmt.Sprintf("https://%s%s", r.Host, r.URL.Path),
+			redirect,
 			http.StatusTemporaryRedirect,
 		)
 		return
