@@ -34,6 +34,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			),
 			http.StatusTemporaryRedirect,
 		)
+		return
 	}
 
 	host := r.Host
