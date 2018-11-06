@@ -2,13 +2,13 @@ package services
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 	"sync"
 	"time"
 )
@@ -26,12 +26,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(
 			w,
 			r,
-			strings.Replace(
-				r.URL.String(),
-				"http://",
-				"https://",
-				1,
-			),
+			fmt.Sprintf("https://%s%s", r.Host, r.URL.Path),
 			http.StatusTemporaryRedirect,
 		)
 		return
