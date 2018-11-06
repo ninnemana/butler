@@ -14,6 +14,7 @@ type Config struct {
 }
 
 type TLS struct {
+	Enforce   bool   `json:"enforce,omitempty"`
 	CertBlock []byte `json:"cert_block,omitempty"`
 	KeyBlock  []byte `json:"key_block,omitempty"`
 
@@ -29,6 +30,7 @@ func Start(cfg Config) error {
 	http.Handle("/", h)
 
 	if cfg.TLS == nil {
+
 		server := &http.Server{
 			Addr:    cfg.ListenAddress,
 			Handler: h,
@@ -39,6 +41,10 @@ func Start(cfg Config) error {
 			"fell out of listening for HTTP traffic",
 		)
 	}
+
+	// tell the handler if it's supposed to
+	// enforce HTTPS usage.
+	h.EnforceSSL = cfg.TLS.Enforce
 
 	var cert tls.Certificate
 	var err error
