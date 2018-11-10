@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +12,8 @@ import (
 	"net/url"
 	"sync"
 	"time"
+
+	"go.opencensus.io/trace"
 )
 
 type handler struct {
@@ -21,6 +24,8 @@ type handler struct {
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	_, span := trace.StartSpan(context.Background(), r.Host)
+	defer span.End()
 
 	if h.EnforceSSL && r.TLS == nil {
 		redirect := fmt.Sprintf("https://%s%s", r.Host, r.URL.Path)

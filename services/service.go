@@ -4,7 +4,11 @@ import (
 	"crypto/tls"
 	"net/http"
 
+	"contrib.go.opencensus.io/exporter/stackdriver"
 	"github.com/pkg/errors"
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/trace"
 )
 
 type Config struct {
@@ -24,16 +28,32 @@ type TLS struct {
 
 func Start(cfg Config) error {
 
+	se, err := stackdriver.NewExporter(stackdriver.Options{
+		ProjectID: "ninneman-org",
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to create Stackdriver exporter")
+	}
+
+	trace.RegisterExporter(se)
+	view.RegisterExporter(se)
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+
 	h := &handler{
 		Targets: cfg.Targets,
 	}
 	http.Handle("/", h)
 
+	censusHandler := &ochttp.Handler{Handler: h}
+	if err := view.Register(ochttp.DefaultServerViews...); err != nil {
+		return errors.Wrap(err, "failed to register ochttp.DefaultServerViews")
+	}
+
 	if cfg.TLS == nil {
 
 		server := &http.Server{
 			Addr:    cfg.ListenAddress,
-			Handler: h,
+			Handler: censusHandler,
 		}
 
 		return errors.Wrap(
@@ -47,7 +67,6 @@ func Start(cfg Config) error {
 	h.EnforceSSL = cfg.TLS.Enforce
 
 	var cert tls.Certificate
-	var err error
 
 	switch {
 	case cfg.TLS.CertBlock != nil && cfg.TLS.KeyBlock != nil:
@@ -79,7 +98,7 @@ func Start(cfg Config) error {
 	go func() {
 		srv := &http.Server{
 			Addr:      ":443",
-			Handler:   h,
+			Handler:   censusHandler,
 			TLSConfig: tlsConfig,
 		}
 		tlsChan <- srv.ListenAndServeTLS("", "")
@@ -88,7 +107,7 @@ func Start(cfg Config) error {
 	go func() {
 		srv := &http.Server{
 			Addr:    cfg.ListenAddress,
-			Handler: h,
+			Handler: censusHandler,
 		}
 
 		unsecure <- errors.Wrap(
