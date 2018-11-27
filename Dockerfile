@@ -1,10 +1,11 @@
 FROM golang:1.11
 
-WORKDIR /go/src/github.com/ninnemana/butler
-COPY . .
+WORKDIR /src
+COPY . /src
 
-RUN go install -v ./...
+RUN go build -o butler -mod=vendor main.go
+RUN mv butler /butler
 
 EXPOSE 80
 
-CMD ["butler"]
+CMD ["/butler"]
