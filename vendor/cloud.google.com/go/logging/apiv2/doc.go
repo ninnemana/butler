@@ -14,15 +14,15 @@
 
 // AUTO-GENERATED CODE. DO NOT EDIT.
 
-// Package monitoring is an auto-generated package for the
-// Stackdriver Monitoring API.
+// Package logging is an auto-generated package for the
+// Stackdriver Logging API.
 //
 //   NOTE: This package is in alpha. It is not stable, and is likely to change.
 //
-// Manages your Stackdriver Monitoring data and configurations. Most projects
-// must be associated with a Stackdriver account, with a few exceptions as
-// noted on the individual method pages.
-package monitoring // import "cloud.google.com/go/monitoring/apiv3"
+// Writes log entries and manages your Logging configuration.
+//
+// Use the client at cloud.google.com/go/logging in preference to this.
+package logging // import "cloud.google.com/go/logging/apiv2"
 
 import (
 	"context"
@@ -48,9 +48,10 @@ func insertMetadata(ctx context.Context, mds ...metadata.MD) context.Context {
 func DefaultAuthScopes() []string {
 	return []string{
 		"https://www.googleapis.com/auth/cloud-platform",
-		"https://www.googleapis.com/auth/monitoring",
-		"https://www.googleapis.com/auth/monitoring.read",
-		"https://www.googleapis.com/auth/monitoring.write",
+		"https://www.googleapis.com/auth/cloud-platform.read-only",
+		"https://www.googleapis.com/auth/logging.admin",
+		"https://www.googleapis.com/auth/logging.read",
+		"https://www.googleapis.com/auth/logging.write",
 	}
 }
 

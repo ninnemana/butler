@@ -3,19 +3,15 @@ package services
 import (
 	"crypto/tls"
 	"net/http"
+	"time"
 
+	"cloud.google.com/go/logging"
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"github.com/pkg/errors"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
 )
-
-type Config struct {
-	ListenAddress string            `json:"listenAddress,omitempty"`
-	TLS           *TLS              `json:"tls,omitempty"`
-	Targets       map[string]string `json:"targets,omitempty"`
-}
 
 type TLS struct {
 	Enforce   bool   `json:"enforce,omitempty"`
@@ -26,10 +22,10 @@ type TLS struct {
 	KeyFile  string `json:"key_file,omitempty"`
 }
 
-func Start(cfg Config) error {
+func Start(cfg *Config) error {
 
 	se, err := stackdriver.NewExporter(stackdriver.Options{
-		ProjectID: "ninneman-org",
+		ProjectID: cfg.ProjectID,
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to create Stackdriver exporter")
@@ -40,7 +36,9 @@ func Start(cfg Config) error {
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	h := &handler{
-		Targets: cfg.Targets,
+		targets:   cfg.Targets,
+		logger:    cfg.Logger,
+		projectID: cfg.ProjectID,
 	}
 	http.Handle("/", h)
 
@@ -55,6 +53,15 @@ func Start(cfg Config) error {
 			Addr:    cfg.ListenAddress,
 			Handler: censusHandler,
 		}
+
+		h.logger.Log(logging.Entry{
+			Timestamp: time.Now().UTC(),
+			Severity:  logging.Info,
+			Labels: map[string]string{
+				"listenAddress": cfg.ListenAddress,
+			},
+			Payload: "Serving traffic via proxy",
+		})
 
 		return errors.Wrap(
 			server.ListenAndServe(),
