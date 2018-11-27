@@ -51,9 +51,20 @@ func TestMain(m *testing.M) {
 func TestService(t *testing.T) {
 
 	go func() {
+		listenAddr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, sampleResponse)
+		}))
+		listenAddr.Close()
+
+		host, err := url.Parse(listenAddr.URL)
+		if err != nil {
+			t.Fatalf("failed to parse httptest server URL: %v", err)
+			return
+		}
+
 		if err := Start(&Config{
 			ProjectID:     os.Getenv("PROJECT_ID"),
-			ListenAddress: "localhost:8081",
+			ListenAddress: host.Host,
 			Targets: map[string]string{
 				"butler-proxy": server.URL,
 			},
@@ -63,7 +74,7 @@ func TestService(t *testing.T) {
 		}
 	}()
 
-	req, err := http.NewRequest(http.MethodGet, "http://localhost:8081", nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s", localhost), nil)
 	if err != nil {
 		t.Fatalf("Failed to create HTTP request: %v", err)
 	}
