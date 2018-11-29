@@ -1,4 +1,5 @@
-FROM golang:1.11
+#FROM golang:1.11
+FROM alexellis2/go-armhf:1.7.4
 
 WORKDIR /src
 COPY . /src
