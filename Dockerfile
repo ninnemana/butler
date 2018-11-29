@@ -7,5 +7,3 @@ RUN go build -o butler -mod=vendor main.go
 RUN mv butler /butler
 
 EXPOSE 80
-
-CMD ["/butler"]
